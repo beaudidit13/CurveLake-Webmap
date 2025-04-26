@@ -1,0 +1,445 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <link rel="stylesheet" href="css/leaflet.css">
+        <link rel="stylesheet" href="css/L.Control.Layers.Tree.css">
+        <link rel="stylesheet" href="css/qgis2web.css">
+        <link rel="stylesheet" href="css/fontawesome-all.min.css">
+        <link rel="stylesheet" href="css/leaflet-control-geocoder.Geocoder.css">
+        <link rel="stylesheet" href="css/leaflet-measure.css">
+        <style>
+        #map {
+            width: 932px;
+            height: 627px;
+        }
+        </style>
+        <title></title>
+    </head>
+    <body>
+        <div id="map">
+        </div>
+        <script src="js/qgis2web_expressions.js"></script>
+        <script src="js/leaflet.js"></script>
+        <script src="js/L.Control.Layers.Tree.min.js"></script>
+        <script src="js/leaflet.rotatedMarker.js"></script>
+        <script src="js/leaflet.pattern.js"></script>
+        <script src="js/leaflet-hash.js"></script>
+        <script src="js/Autolinker.min.js"></script>
+        <script src="js/rbush.min.js"></script>
+        <script src="js/labelgun.min.js"></script>
+        <script src="js/labels.js"></script>
+        <script src="js/leaflet-control-geocoder.Geocoder.js"></script>
+        <script src="js/leaflet-measure.js"></script>
+        <script src="data/Curve12_27.js"></script>
+        <script>
+        var map = L.map('map', {
+            zoomControl:false, maxZoom:28, minZoom:1
+        }).fitBounds([[44.428681296288374,-78.47701257810512],[44.55183909765234,-78.22745619293168]]);
+        var hash = new L.Hash(map);
+        map.attributionControl.setPrefix('<a href="https://github.com/tomchadwin/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>');
+        var autolinker = new Autolinker({truncate: {length: 30, location: 'smart'}});
+        // remove popup's row if "visible-with-data"
+        function removeEmptyRowsFromPopupContent(content, feature) {
+         var tempDiv = document.createElement('div');
+         tempDiv.innerHTML = content;
+         var rows = tempDiv.querySelectorAll('tr');
+         for (var i = 0; i < rows.length; i++) {
+             var td = rows[i].querySelector('td.visible-with-data');
+             var key = td ? td.id : '';
+             if (td && td.classList.contains('visible-with-data') && feature.properties[key] == null) {
+                 rows[i].parentNode.removeChild(rows[i]);
+             }
+         }
+         return tempDiv.innerHTML;
+        }
+        // add class to format popup if it contains media
+		function addClassToPopupIfMedia(content, popup) {
+			var tempDiv = document.createElement('div');
+			tempDiv.innerHTML = content;
+			if (tempDiv.querySelector('td img')) {
+				popup._contentNode.classList.add('media');
+					// Delay to force the redraw
+					setTimeout(function() {
+						popup.update();
+					}, 10);
+			} else {
+				popup._contentNode.classList.remove('media');
+			}
+		}
+        var zoomControl = L.control.zoom({
+            position: 'topleft'
+        }).addTo(map);
+        var measureControl = new L.Control.Measure({
+            position: 'topleft',
+            primaryLengthUnit: 'meters',
+            secondaryLengthUnit: 'kilometers',
+            primaryAreaUnit: 'sqmeters',
+            secondaryAreaUnit: 'hectares'
+        });
+        measureControl.addTo(map);
+        document.getElementsByClassName('leaflet-control-measure-toggle')[0].innerHTML = '';
+        document.getElementsByClassName('leaflet-control-measure-toggle')[0].className += ' fas fa-ruler';
+        var bounds_group = new L.featureGroup([]);
+        function setBounds() {
+            map.setMaxBounds(map.getBounds());
+        }
+        map.createPane('pane_OSMStandard_0');
+        map.getPane('pane_OSMStandard_0').style.zIndex = 400;
+        var layer_OSMStandard_0 = L.tileLayer('http://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            pane: 'pane_OSMStandard_0',
+            opacity: 1.0,
+            attribution: '<a href="https://www.openstreetmap.org/copyright">© OpenStreetMap contributors, CC-BY-SA</a>',
+            minZoom: 1,
+            maxZoom: 28,
+            minNativeZoom: 0,
+            maxNativeZoom: 19
+        });
+        layer_OSMStandard_0;
+        map.addLayer(layer_OSMStandard_0);
+        map.createPane('pane_GoogleSatellite_1');
+        map.getPane('pane_GoogleSatellite_1').style.zIndex = 401;
+        var layer_GoogleSatellite_1 = L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+            pane: 'pane_GoogleSatellite_1',
+            opacity: 0.717,
+            attribution: '<a href="https://www.google.at/permissions/geoguidelines/attr-guide.html">Map data ©2015 Google</a>',
+            minZoom: 1,
+            maxZoom: 28,
+            minNativeZoom: 0,
+            maxNativeZoom: 20
+        });
+        layer_GoogleSatellite_1;
+        map.addLayer(layer_GoogleSatellite_1);
+        map.createPane('pane_NorthCurveLake_2');
+        map.getPane('pane_NorthCurveLake_2').style.zIndex = 402;
+        var img_NorthCurveLake_2 = 'data/NorthCurveLake_2.png';
+        var img_bounds_NorthCurveLake_2 = [[44.46607203345409,-78.37618845173212],[44.47383970418609,-78.36983321676037]];
+        var layer_NorthCurveLake_2 = new L.imageOverlay(img_NorthCurveLake_2,
+                                              img_bounds_NorthCurveLake_2,
+                                              {pane: 'pane_NorthCurveLake_2'});
+        bounds_group.addLayer(layer_NorthCurveLake_2);
+        map.addLayer(layer_NorthCurveLake_2);
+        map.createPane('pane_ArrowBayRd_3');
+        map.getPane('pane_ArrowBayRd_3').style.zIndex = 403;
+        var img_ArrowBayRd_3 = 'data/ArrowBayRd_3.png';
+        var img_bounds_ArrowBayRd_3 = [[44.462518035171676,-78.36639120453783],[44.47160135180418,-78.35873427664629]];
+        var layer_ArrowBayRd_3 = new L.imageOverlay(img_ArrowBayRd_3,
+                                              img_bounds_ArrowBayRd_3,
+                                              {pane: 'pane_ArrowBayRd_3'});
+        bounds_group.addLayer(layer_ArrowBayRd_3);
+        map.addLayer(layer_ArrowBayRd_3);
+        map.createPane('pane_Seniors_4');
+        map.getPane('pane_Seniors_4').style.zIndex = 404;
+        var img_Seniors_4 = 'data/Seniors_4.png';
+        var img_bounds_Seniors_4 = [[44.460076970318696,-78.37808383568786],[44.46288660317225,-78.37563238126454]];
+        var layer_Seniors_4 = new L.imageOverlay(img_Seniors_4,
+                                              img_bounds_Seniors_4,
+                                              {pane: 'pane_Seniors_4'});
+        bounds_group.addLayer(layer_Seniors_4);
+        map.addLayer(layer_Seniors_4);
+        map.createPane('pane_CedarBay_5');
+        map.getPane('pane_CedarBay_5').style.zIndex = 405;
+        var img_CedarBay_5 = 'data/CedarBay_5.png';
+        var img_bounds_CedarBay_5 = [[44.47327922338001,-78.37194364406454],[44.47831431401507,-78.3649615000863]];
+        var layer_CedarBay_5 = new L.imageOverlay(img_CedarBay_5,
+                                              img_bounds_CedarBay_5,
+                                              {pane: 'pane_CedarBay_5'});
+        bounds_group.addLayer(layer_CedarBay_5);
+        map.addLayer(layer_CedarBay_5);
+        map.createPane('pane_SeaweedIsland_6');
+        map.getPane('pane_SeaweedIsland_6').style.zIndex = 406;
+        var img_SeaweedIsland_6 = 'data/SeaweedIsland_6.png';
+        var img_bounds_SeaweedIsland_6 = [[44.48169787518304,-78.37780519718528],[44.48876966636914,-78.37254087051609]];
+        var layer_SeaweedIsland_6 = new L.imageOverlay(img_SeaweedIsland_6,
+                                              img_bounds_SeaweedIsland_6,
+                                              {pane: 'pane_SeaweedIsland_6'});
+        bounds_group.addLayer(layer_SeaweedIsland_6);
+        map.addLayer(layer_SeaweedIsland_6);
+        map.createPane('pane_HenerysWetland_7');
+        map.getPane('pane_HenerysWetland_7').style.zIndex = 407;
+        var img_HenerysWetland_7 = 'data/HenerysWetland_7.png';
+        var img_bounds_HenerysWetland_7 = [[44.455467197196946,-78.3687852521458],[44.45801476964903,-78.36695331480985]];
+        var layer_HenerysWetland_7 = new L.imageOverlay(img_HenerysWetland_7,
+                                              img_bounds_HenerysWetland_7,
+                                              {pane: 'pane_HenerysWetland_7'});
+        bounds_group.addLayer(layer_HenerysWetland_7);
+        map.addLayer(layer_HenerysWetland_7);
+        map.createPane('pane_RolliesBay_8');
+        map.getPane('pane_RolliesBay_8').style.zIndex = 408;
+        var img_RolliesBay_8 = 'data/RolliesBay_8.png';
+        var img_bounds_RolliesBay_8 = [[44.486226612902286,-78.37115926930862],[44.49063646937209,-78.36715871803843]];
+        var layer_RolliesBay_8 = new L.imageOverlay(img_RolliesBay_8,
+                                              img_bounds_RolliesBay_8,
+                                              {pane: 'pane_RolliesBay_8'});
+        bounds_group.addLayer(layer_RolliesBay_8);
+        map.addLayer(layer_RolliesBay_8);
+        map.createPane('pane_QuinQuish_9');
+        map.getPane('pane_QuinQuish_9').style.zIndex = 409;
+        var img_QuinQuish_9 = 'data/QuinQuish_9.png';
+        var img_bounds_QuinQuish_9 = [[44.48178463061824,-78.35324267746827],[44.490189433045124,-78.34668240225862]];
+        var layer_QuinQuish_9 = new L.imageOverlay(img_QuinQuish_9,
+                                              img_bounds_QuinQuish_9,
+                                              {pane: 'pane_QuinQuish_9'});
+        bounds_group.addLayer(layer_QuinQuish_9);
+        map.addLayer(layer_QuinQuish_9);
+        map.createPane('pane_Subdivision_10');
+        map.getPane('pane_Subdivision_10').style.zIndex = 410;
+        var img_Subdivision_10 = 'data/Subdivision_10.png';
+        var img_bounds_Subdivision_10 = [[44.475412858206674,-78.35658521334788],[44.48343823826236,-78.35145717962081]];
+        var layer_Subdivision_10 = new L.imageOverlay(img_Subdivision_10,
+                                              img_bounds_Subdivision_10,
+                                              {pane: 'pane_Subdivision_10'});
+        bounds_group.addLayer(layer_Subdivision_10);
+        map.addLayer(layer_Subdivision_10);
+        map.createPane('pane_CharliesBay_11');
+        map.getPane('pane_CharliesBay_11').style.zIndex = 411;
+        var img_CharliesBay_11 = 'data/CharliesBay_11.png';
+        var img_bounds_CharliesBay_11 = [[44.456628258326404,-78.37985127994243],[44.46069392605738,-78.37509760288134]];
+        var layer_CharliesBay_11 = new L.imageOverlay(img_CharliesBay_11,
+                                              img_bounds_CharliesBay_11,
+                                              {pane: 'pane_CharliesBay_11'});
+        bounds_group.addLayer(layer_CharliesBay_11);
+        map.addLayer(layer_CharliesBay_11);
+        map.createPane('pane_BigIsland_12');
+        map.getPane('pane_BigIsland_12').style.zIndex = 412;
+        var img_BigIsland_12 = 'data/BigIsland_12.png';
+        var img_bounds_BigIsland_12 = [[44.47949924026695,-78.35046772904698],[44.487880568988025,-78.34105393275676]];
+        var layer_BigIsland_12 = new L.imageOverlay(img_BigIsland_12,
+                                              img_bounds_BigIsland_12,
+                                              {pane: 'pane_BigIsland_12'});
+        bounds_group.addLayer(layer_BigIsland_12);
+        map.addLayer(layer_BigIsland_12);
+        map.createPane('pane_BigIsalnd_13');
+        map.getPane('pane_BigIsalnd_13').style.zIndex = 413;
+        var img_BigIsalnd_13 = 'data/BigIsalnd_13.png';
+        var img_bounds_BigIsalnd_13 = [[44.4793814377534,-78.35048042812588],[44.48835072744476,-78.34097924249372]];
+        var layer_BigIsalnd_13 = new L.imageOverlay(img_BigIsalnd_13,
+                                              img_bounds_BigIsalnd_13,
+                                              {pane: 'pane_BigIsalnd_13'});
+        bounds_group.addLayer(layer_BigIsalnd_13);
+        map.addLayer(layer_BigIsalnd_13);
+        map.createPane('pane_BigIsland_14');
+        map.getPane('pane_BigIsland_14').style.zIndex = 414;
+        var img_BigIsland_14 = 'data/BigIsland_14.png';
+        var img_bounds_BigIsland_14 = [[44.48550444340713,-78.34065456002749],[44.49116620626074,-78.33586925927293]];
+        var layer_BigIsland_14 = new L.imageOverlay(img_BigIsland_14,
+                                              img_bounds_BigIsland_14,
+                                              {pane: 'pane_BigIsland_14'});
+        bounds_group.addLayer(layer_BigIsland_14);
+        map.addLayer(layer_BigIsland_14);
+        map.createPane('pane_BigIsland_15');
+        map.getPane('pane_BigIsland_15').style.zIndex = 415;
+        var img_BigIsland_15 = 'data/BigIsland_15.png';
+        var img_bounds_BigIsland_15 = [[44.47931000785547,-78.35047602807899],[44.49075337030749,-78.33639897295147]];
+        var layer_BigIsland_15 = new L.imageOverlay(img_BigIsland_15,
+                                              img_bounds_BigIsland_15,
+                                              {pane: 'pane_BigIsland_15'});
+        bounds_group.addLayer(layer_BigIsland_15);
+        map.addLayer(layer_BigIsland_15);
+        map.createPane('pane_ChemongCottage_16');
+        map.getPane('pane_ChemongCottage_16').style.zIndex = 416;
+        var img_ChemongCottage_16 = 'data/ChemongCottage_16.png';
+        var img_bounds_ChemongCottage_16 = [[44.49994700704502,-78.34277240594442],[44.50542757194415,-78.33573110911456]];
+        var layer_ChemongCottage_16 = new L.imageOverlay(img_ChemongCottage_16,
+                                              img_bounds_ChemongCottage_16,
+                                              {pane: 'pane_ChemongCottage_16'});
+        bounds_group.addLayer(layer_ChemongCottage_16);
+        map.addLayer(layer_ChemongCottage_16);
+        map.createPane('pane_Beausolie_17');
+        map.getPane('pane_Beausolie_17').style.zIndex = 417;
+        var img_Beausolie_17 = 'data/Beausolie_17.png';
+        var img_bounds_Beausolie_17 = [[44.4799563364229,-78.37102813840663],[44.48763061804113,-78.36618530838805]];
+        var layer_Beausolie_17 = new L.imageOverlay(img_Beausolie_17,
+                                              img_bounds_Beausolie_17,
+                                              {pane: 'pane_Beausolie_17'});
+        bounds_group.addLayer(layer_Beausolie_17);
+        map.addLayer(layer_Beausolie_17);
+        map.createPane('pane_BuckhornCottage_18');
+        map.getPane('pane_BuckhornCottage_18').style.zIndex = 418;
+        var img_BuckhornCottage_18 = 'data/BuckhornCottage_18.png';
+        var img_bounds_BuckhornCottage_18 = [[44.5061730823182,-78.3658264675966],[44.50973426502634,-78.36250516103914]];
+        var layer_BuckhornCottage_18 = new L.imageOverlay(img_BuckhornCottage_18,
+                                              img_bounds_BuckhornCottage_18,
+                                              {pane: 'pane_BuckhornCottage_18'});
+        bounds_group.addLayer(layer_BuckhornCottage_18);
+        map.addLayer(layer_BuckhornCottage_18);
+        map.createPane('pane_ThePark_19');
+        map.getPane('pane_ThePark_19').style.zIndex = 419;
+        var img_ThePark_19 = 'data/ThePark_19.png';
+        var img_bounds_ThePark_19 = [[44.458992873921986,-78.36601458671552],[44.463618239464076,-78.3627721064047]];
+        var layer_ThePark_19 = new L.imageOverlay(img_ThePark_19,
+                                              img_bounds_ThePark_19,
+                                              {pane: 'pane_ThePark_19'});
+        bounds_group.addLayer(layer_ThePark_19);
+        map.addLayer(layer_ThePark_19);
+        map.createPane('pane_Nigamoog_20');
+        map.getPane('pane_Nigamoog_20').style.zIndex = 420;
+        var img_Nigamoog_20 = 'data/Nigamoog_20.png';
+        var img_bounds_Nigamoog_20 = [[44.4541838239964,-78.37966637105073],[44.45685708161511,-78.3736603736268]];
+        var layer_Nigamoog_20 = new L.imageOverlay(img_Nigamoog_20,
+                                              img_bounds_Nigamoog_20,
+                                              {pane: 'pane_Nigamoog_20'});
+        bounds_group.addLayer(layer_Nigamoog_20);
+        map.addLayer(layer_Nigamoog_20);
+        map.createPane('pane_Weengushk_21');
+        map.getPane('pane_Weengushk_21').style.zIndex = 421;
+        var img_Weengushk_21 = 'data/Weengushk_21.png';
+        var img_bounds_Weengushk_21 = [[44.46250497804681,-78.37885556668681],[44.466775876806174,-78.37393645446228]];
+        var layer_Weengushk_21 = new L.imageOverlay(img_Weengushk_21,
+                                              img_bounds_Weengushk_21,
+                                              {pane: 'pane_Weengushk_21'});
+        bounds_group.addLayer(layer_Weengushk_21);
+        map.addLayer(layer_Weengushk_21);
+        map.createPane('pane_RolliesPoint_22');
+        map.getPane('pane_RolliesPoint_22').style.zIndex = 422;
+        var img_RolliesPoint_22 = 'data/RolliesPoint_22.png';
+        var img_bounds_RolliesPoint_22 = [[44.48859558617562,-78.34845272170698],[44.500988242386164,-78.33944357575093]];
+        var layer_RolliesPoint_22 = new L.imageOverlay(img_RolliesPoint_22,
+                                              img_bounds_RolliesPoint_22,
+                                              {pane: 'pane_RolliesPoint_22'});
+        bounds_group.addLayer(layer_RolliesPoint_22);
+        map.addLayer(layer_RolliesPoint_22);
+        map.createPane('pane_KnottsLanding_23');
+        map.getPane('pane_KnottsLanding_23').style.zIndex = 423;
+        var img_KnottsLanding_23 = 'data/KnottsLanding_23.png';
+        var img_bounds_KnottsLanding_23 = [[44.47090464419791,-78.36114187983395],[44.476484206145464,-78.35370674943047]];
+        var layer_KnottsLanding_23 = new L.imageOverlay(img_KnottsLanding_23,
+                                              img_bounds_KnottsLanding_23,
+                                              {pane: 'pane_KnottsLanding_23'});
+        bounds_group.addLayer(layer_KnottsLanding_23);
+        map.addLayer(layer_KnottsLanding_23);
+        map.createPane('pane_PioneerParkish_24');
+        map.getPane('pane_PioneerParkish_24').style.zIndex = 424;
+        var img_PioneerParkish_24 = 'data/PioneerParkish_24.png';
+        var img_bounds_PioneerParkish_24 = [[44.49108323592249,-78.36937908931552],[44.495296889578015,-78.36446141371965]];
+        var layer_PioneerParkish_24 = new L.imageOverlay(img_PioneerParkish_24,
+                                              img_bounds_PioneerParkish_24,
+                                              {pane: 'pane_PioneerParkish_24'});
+        bounds_group.addLayer(layer_PioneerParkish_24);
+        map.addLayer(layer_PioneerParkish_24);
+        map.createPane('pane_Henerys_25');
+        map.getPane('pane_Henerys_25').style.zIndex = 425;
+        var img_Henerys_25 = 'data/Henerys_25.png';
+        var img_bounds_Henerys_25 = [[44.45382500795305,-78.37178226491747],[44.4580851954487,-78.36520083175928]];
+        var layer_Henerys_25 = new L.imageOverlay(img_Henerys_25,
+                                              img_bounds_Henerys_25,
+                                              {pane: 'pane_Henerys_25'});
+        bounds_group.addLayer(layer_Henerys_25);
+        map.addLayer(layer_Henerys_25);
+        map.createPane('pane_HeneryWest_26');
+        map.getPane('pane_HeneryWest_26').style.zIndex = 426;
+        var img_HeneryWest_26 = 'data/HeneryWest_26.png';
+        var img_bounds_HeneryWest_26 = [[44.45378956018991,-78.37446682088287],[44.45655236848731,-78.36827854133084]];
+        var layer_HeneryWest_26 = new L.imageOverlay(img_HeneryWest_26,
+                                              img_bounds_HeneryWest_26,
+                                              {pane: 'pane_HeneryWest_26'});
+        bounds_group.addLayer(layer_HeneryWest_26);
+        map.addLayer(layer_HeneryWest_26);
+        function pop_Curve12_27(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['fid'] !== null ? autolinker.link(String(feature.properties['fid']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['location'] !== null ? autolinker.link(String(feature.properties['location']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_Curve12_27_0() {
+            return {
+                pane: 'pane_Curve12_27',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(145,83,45,0.0)',
+                interactive: false,
+            }
+        }
+        map.createPane('pane_Curve12_27');
+        map.getPane('pane_Curve12_27').style.zIndex = 427;
+        map.getPane('pane_Curve12_27').style['mix-blend-mode'] = 'normal';
+        var layer_Curve12_27 = new L.geoJson(json_Curve12_27, {
+            attribution: '',
+            interactive: false,
+            dataVar: 'json_Curve12_27',
+            layerName: 'layer_Curve12_27',
+            pane: 'pane_Curve12_27',
+            onEachFeature: pop_Curve12_27,
+            style: style_Curve12_27_0,
+        });
+        bounds_group.addLayer(layer_Curve12_27);
+        map.addLayer(layer_Curve12_27);
+        var osmGeocoder = new L.Control.Geocoder({
+            collapsed: true,
+            position: 'topleft',
+            text: 'Search',
+            title: 'Testing'
+        }).addTo(map);
+        document.getElementsByClassName('leaflet-control-geocoder-icon')[0]
+        .className += ' fa fa-search';
+        document.getElementsByClassName('leaflet-control-geocoder-icon')[0]
+        .title += 'Search for a place';
+        var overlaysTree = [
+        {label: '<b>CurveLake</b>',  selectAllCheckbox: true, children: [
+            {label: '<img src="legend/Curve12_27.png" /> Curve12', layer: layer_Curve12_27},
+            {label: "HeneryWest", layer: layer_HeneryWest_26},
+            {label: "Henerys", layer: layer_Henerys_25},
+            {label: "PioneerParkish", layer: layer_PioneerParkish_24},
+            {label: "KnottsLanding", layer: layer_KnottsLanding_23},
+            {label: "RolliesPoint", layer: layer_RolliesPoint_22},
+            {label: "Weengushk", layer: layer_Weengushk_21},
+            {label: "Nigamoog", layer: layer_Nigamoog_20},
+            {label: "The Park", layer: layer_ThePark_19},
+            {label: "Buckhorn Cottage", layer: layer_BuckhornCottage_18},
+            {label: "Beausolie", layer: layer_Beausolie_17},
+            {label: "ChemongCottage", layer: layer_ChemongCottage_16},
+            {label: "BigIsland", layer: layer_BigIsland_15},
+            {label: "BigIsland", layer: layer_BigIsland_14},
+            {label: "BigIsalnd", layer: layer_BigIsalnd_13},
+            {label: "BigIsland", layer: layer_BigIsland_12},
+            {label: "CharliesBay", layer: layer_CharliesBay_11},
+            {label: "Subdivision", layer: layer_Subdivision_10},
+            {label: "QuinQuish", layer: layer_QuinQuish_9},
+            {label: "RolliesBay", layer: layer_RolliesBay_8},
+            {label: "HenerysWetland", layer: layer_HenerysWetland_7},
+            {label: "Seaweed Island", layer: layer_SeaweedIsland_6},
+            {label: "CedarBay", layer: layer_CedarBay_5},
+            {label: "Seniors", layer: layer_Seniors_4},
+            {label: "ArrowBay Rd", layer: layer_ArrowBayRd_3},
+            {label: "North Curve Lake", layer: layer_NorthCurveLake_2},]},
+            {label: "Google Satellite", layer: layer_GoogleSatellite_1},
+            {label: "OSM Standard", layer: layer_OSMStandard_0},]
+        var lay = L.control.layers.tree(null, overlaysTree,{
+            //namedToggle: true,
+            //selectorBack: false,
+            //closedSymbol: '&#8862; &#x1f5c0;',
+            //openedSymbol: '&#8863; &#x1f5c1;',
+            //collapseAll: 'Collapse all',
+            //expandAll: 'Expand all',
+            collapsed: true,
+        });
+        lay.addTo(map);
+        setBounds();
+        L.ImageOverlay.include({
+            getBounds: function () {
+                return this._bounds;
+            }
+        });
+        </script>
+    </body>
+</html>
